@@ -2,7 +2,6 @@ using GameAPI.WebMVC.Data;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
-
 namespace GameAPI.WebMVC
 {
     public class Program
@@ -15,13 +14,19 @@ namespace GameAPI.WebMVC
             builder.Services.AddRazorPages(); //Identity pages
 
             builder.Services.AddDbContext<GameDbContext>(options =>
-                options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+                options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 
             builder.Services.AddDefaultIdentity<IdentityUser>()
                 .AddEntityFrameworkStores<GameDbContext>();
 
-
             var app = builder.Build();
+
+            // Auto-create local SQLite database if not exists
+            using (var scope = app.Services.CreateScope())
+            {
+                var db = scope.ServiceProvider.GetRequiredService<GameDbContext>();
+                db.Database.EnsureCreated();
+            }
 
             if (!app.Environment.IsDevelopment())
             {
